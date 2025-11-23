@@ -23,8 +23,15 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public Boolean deleteClient(Long cpf) {
-        return null;
+    public Boolean deleteClient(String id) {
+        clientRepository.deleteById(id);
+
+        Optional<Client> client = clientRepository.findById(id);
+        if(client.isPresent()) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override

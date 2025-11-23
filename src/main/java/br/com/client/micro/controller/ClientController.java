@@ -1,9 +1,12 @@
 package br.com.client.micro.controller;
 
+import br.com.client.micro.controller.dto.ClientDeletedSuccessfullyDto;
 import br.com.client.micro.controller.dto.ClientCreatedSuccessfullyDto;
 import br.com.client.micro.controller.dto.CreateClientDto;
+import br.com.client.micro.controller.dto.DeleteClientDto;
 import br.com.client.micro.domain.Client;
-import br.com.client.micro.infra.DefaultErrorResponse;
+import br.com.client.micro.exceptions.ClientNotFoundException;
+import br.com.client.micro.exceptions.ErrorDeletingClientException;
 import br.com.client.micro.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +17,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -106,5 +110,60 @@ public class ClientController {
                         newClient
                 )
         );
+    }
+
+    @DeleteMapping("/api/client/delete")
+    @Operation(
+            summary = "Delete a client",
+            description = "Removes a client from the system",
+            tags = {"Client"},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Client deleted successfully!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ClientDeletedSuccessfullyDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid data",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"error\": \"Validation failed\", \"errors\": \"[...]\" }"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "We were unable to delete the client",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"message\": \"We were unable to delete the client!\" }"
+                                    )
+                            )
+                    )
+            }
+    )
+    public ResponseEntity<ClientDeletedSuccessfullyDto> deleteClient(@Valid @RequestBody DeleteClientDto clientDto) {
+        String clientId = clientDto.id();
+        Long clientCpf = Long.parseLong(clientDto.cpf());
+
+        Optional<Client> client = clientService.getClient(clientCpf);
+
+        if(!client.isPresent()){
+            throw new ClientNotFoundException();
+        }
+
+        Boolean deleteResponse = clientService.deleteClient(clientId);
+
+        if(!deleteResponse){
+            throw new ErrorDeletingClientException();
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(new ClientDeletedSuccessfullyDto("Client deleted successfully!"));
     }
 }
