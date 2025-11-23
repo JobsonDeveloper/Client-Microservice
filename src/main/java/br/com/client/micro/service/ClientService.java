@@ -1,6 +1,7 @@
 package br.com.client.micro.service;
 
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.exceptions.ClientNotFoundException;
 import br.com.client.micro.repository.IClientRepository;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class ClientService implements IClientService {
         clientRepository.deleteById(id);
 
         Optional<Client> client = clientRepository.findById(id);
-        if(client.isPresent()) {
+        if (client.isPresent()) {
             return false;
         }
 
@@ -47,6 +48,20 @@ public class ClientService implements IClientService {
 
     @Override
     public Client updateClient(Client client) {
-        return null;
+        Optional<Client> savedClient = clientRepository.findById(client.getId());
+
+        if (!savedClient.isPresent()) {
+            throw new ClientNotFoundException();
+        }
+
+        Client clientMounter = savedClient.get();
+        clientMounter.setFirstName(client.getFirstName());
+        clientMounter.setLastName(client.getLastName());
+        clientMounter.setBirthday(client.getBirthday());
+        clientMounter.setEmail(client.getEmail());
+        clientMounter.setPhone(client.getPhone());
+        clientMounter.setAddress(client.getAddress());
+
+        return clientRepository.save(clientMounter);
     }
 }
