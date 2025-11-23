@@ -1,9 +1,6 @@
 package br.com.client.micro.controller;
 
-import br.com.client.micro.controller.dto.ClientDeletedSuccessfullyDto;
-import br.com.client.micro.controller.dto.ClientCreatedSuccessfullyDto;
-import br.com.client.micro.controller.dto.CreateClientDto;
-import br.com.client.micro.controller.dto.DeleteClientDto;
+import br.com.client.micro.controller.dto.*;
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.exceptions.ClientNotFoundException;
 import br.com.client.micro.exceptions.ErrorDeletingClientException;
@@ -17,10 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 
 import java.time.LocalDate;
@@ -75,7 +69,7 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ClientCreatedSuccessfullyDto> createUser(@Valid @RequestBody CreateClientDto clientDto) throws ClientAlreadyRegisteredException {
+    public ResponseEntity<ClientCreatedSuccessfullyDto> createClient(@Valid @RequestBody CreateClientDto clientDto) throws ClientAlreadyRegisteredException {
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
         Long cpf = Long.parseLong(clientDto.cpf());
@@ -165,5 +159,55 @@ public class ClientController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(new ClientDeletedSuccessfullyDto("Client deleted successfully!"));
+    }
+
+    @PutMapping("/api/client/update")
+    @Operation(
+            summary = "Update a user",
+            description = "Update the data from a user of system",
+            tags = {"Client"},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "201",
+                            description = "Client data modified successfully!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ModifiedClientDataDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid data",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"error\": \"Validation failed\", \"errors\": \"[...]\" }"
+                                    )
+                            )
+                    )
+            }
+    )
+    public ResponseEntity<ModifiedClientDataDto> changeClient(@Valid @RequestBody ChangeClientDto clientDto) {
+        String id = clientDto.id();
+        String firstName = clientDto.firstName();
+        String lastName = clientDto.lastName();
+        LocalDate birthday = clientDto.birthday();
+        String email = clientDto.email();
+        String phone = clientDto.phone();
+        String address = clientDto.address();
+
+        Client currentClient = Client.builder()
+                .id(id)
+                .firstName(firstName)
+                .lastName(lastName)
+                .birthday(birthday)
+                .email(email)
+                .phone(phone)
+                .address(address)
+                .build();
+
+        Client client = clientService.updateClient(currentClient);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ModifiedClientDataDto("Client data modified successfully!", client));
     }
 }
