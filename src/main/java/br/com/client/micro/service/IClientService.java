@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface IClientService {
     public Client createClient(Client client);
-    public Boolean deleteClient(Long cpf);
+    public Boolean deleteClient(String id);
     public Optional<Client> getClient(Long cpf);
     public List<Client> listClients();
     public Client updateClient(Client client);
