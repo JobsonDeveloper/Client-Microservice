@@ -66,6 +66,16 @@ public class ClientController {
                                             example = "{ \"status\": \"CONFLICT\", \"message\": \"Client already registered!\" }"
                                     )
                             )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "It was not possible to create the client",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"It was not possible to create the client!\" }"
+                                    )
+                            )
                     )
             }
     )
@@ -79,12 +89,6 @@ public class ClientController {
         String phone = clientDto.phone();
         String address = clientDto.address();
         LocalDateTime createdAt = LocalDateTime.now();
-
-        Optional<Client> savedClient = clientService.getClient(cpf);
-
-        if (savedClient.isPresent()) {
-            throw new ClientAlreadyRegisteredException();
-        }
 
         Client client = Client.builder()
                 .firstName(firstName)
@@ -131,12 +135,22 @@ public class ClientController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "404",
+                            description = "Client not found!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"status\": \"NOT_FOUND\", \"message\": \"Client not found!\" }"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
                             responseCode = "500",
                             description = "We were unable to delete the client",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(
-                                            example = "{ \"message\": \"We were unable to delete the client!\" }"
+                                            example = "{ \"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"We were unable to delete the client!\" }"
                                     )
                             )
                     )
@@ -144,19 +158,8 @@ public class ClientController {
     )
     public ResponseEntity<ClientDeletedSuccessfullyDto> deleteClient(@Valid @RequestBody DeleteClientDto clientDto) {
         String clientId = clientDto.id();
-        Long clientCpf = Long.parseLong(clientDto.cpf());
 
-        Optional<Client> client = clientService.getClient(clientCpf);
-
-        if(!client.isPresent()){
-            throw new ClientNotFoundException();
-        }
-
-        Boolean deleteResponse = clientService.deleteClient(clientId);
-
-        if(!deleteResponse){
-            throw new ErrorDeletingClientException();
-        }
+        clientService.deleteClient(clientId);
 
         return ResponseEntity.status(HttpStatus.OK).body(new ClientDeletedSuccessfullyDto("Client deleted successfully!"));
     }
@@ -182,6 +185,26 @@ public class ClientController {
                                     mediaType = "application/json",
                                     schema = @Schema(
                                             example = "{ \"error\": \"Validation failed\", \"errors\": \"[...]\" }"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Client not found!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"status\": \"NOT_FOUND\", \"message\": \"Client not found!\" }"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "It was not possible to modify the client data!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"It was not possible to modify the client data!\" }"
                                     )
                             )
                     )

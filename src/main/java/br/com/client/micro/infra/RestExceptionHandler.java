@@ -1,8 +1,6 @@
 package br.com.client.micro.infra;
 
-import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
-import br.com.client.micro.exceptions.ClientNotFoundException;
-import br.com.client.micro.exceptions.ErrorDeletingClientException;
+import br.com.client.micro.exceptions.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -61,8 +59,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(defaultErrorResponse);
     }
 
-    @ExceptionHandler(ErrorDeletingClientException.class)
-    private ResponseEntity<DefaultErrorResponse> errorDeletingClientHandler(ErrorDeletingClientException exception) {
+    @ExceptionHandler({
+            ErrorDeletingClientException.class,
+            ErrorCreatingClientException.class,
+            ErrorModifyingClientDataException.class
+    })
+    private ResponseEntity<DefaultErrorResponse> errorDeletingClientHandler(RuntimeException exception) {
         DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(defaultErrorResponse);
     }

@@ -1,7 +1,10 @@
 package br.com.client.micro.service;
 
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import br.com.client.micro.exceptions.ClientNotFoundException;
+import br.com.client.micro.exceptions.ErrorCreatingClientException;
+import br.com.client.micro.exceptions.ErrorDeletingClientException;
 import br.com.client.micro.repository.IClientRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,20 +22,35 @@ public class ClientService implements IClientService {
 
     @Override
     public Client createClient(Client client) {
+        Optional<Client> savedClient = clientRepository.findByCpf(client.getCpf());
+
+        if (savedClient.isPresent()) {
+            throw new ClientAlreadyRegisteredException();
+        }
+
         Client newClient = clientRepository.save(client);
+
+        if(newClient.getId().isBlank()) {
+            throw new ErrorCreatingClientException();
+        }
+
         return newClient;
     }
 
     @Override
-    public Boolean deleteClient(String id) {
-        clientRepository.deleteById(id);
+    public void deleteClient(String id) {
+        Optional<Client> registeredClient = clientRepository.findById(id);
 
-        Optional<Client> client = clientRepository.findById(id);
-        if (client.isPresent()) {
-            return false;
+        if(!registeredClient.isPresent()){
+            throw new ClientNotFoundException();
         }
 
-        return true;
+        clientRepository.deleteById(id);
+        Optional<Client> client = clientRepository.findById(id);
+
+        if (client.isPresent()) {
+            throw new ErrorDeletingClientException();
+        }
     }
 
     @Override
@@ -62,6 +80,12 @@ public class ClientService implements IClientService {
         clientMounter.setPhone(client.getPhone());
         clientMounter.setAddress(client.getAddress());
 
-        return clientRepository.save(clientMounter);
+        Client modifiedClient = clientRepository.save(clientMounter);
+
+        if(modifiedClient.getId().isBlank()) {
+            throw new ErrorCreatingClientException();
+        }
+
+        return modifiedClient;
     }
 }
