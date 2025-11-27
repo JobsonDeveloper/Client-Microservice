@@ -54,9 +54,14 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public Optional<Client> getClient(Long cpf) {
-        Optional<Client> client = clientRepository.findByCpf(cpf);
-        return client;
+    public Client getClient(String id) {
+        Optional<Client> client = clientRepository.findById(id);
+
+        if(!client.isPresent()) {
+            throw new ClientNotFoundException();
+        }
+
+        return client.get();
     }
 
     @Override

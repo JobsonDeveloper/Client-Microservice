@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface IClientService {
     public Client createClient(Client client);
     public void deleteClient(String id);
-    public Optional<Client> getClient(Long cpf);
+    public Client getClient(String id);
     public List<Client> listClients();
     public Client updateClient(Client client);
 }
