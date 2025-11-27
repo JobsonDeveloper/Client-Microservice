@@ -1,11 +1,14 @@
 package br.com.client.micro.service;
 
+import br.com.client.micro.controller.dto.ReturnAllClientsDto;
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import br.com.client.micro.exceptions.ClientNotFoundException;
 import br.com.client.micro.exceptions.ErrorCreatingClientException;
 import br.com.client.micro.exceptions.ErrorDeletingClientException;
 import br.com.client.micro.repository.IClientRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,7 +33,7 @@ public class ClientService implements IClientService {
 
         Client newClient = clientRepository.save(client);
 
-        if(newClient.getId().isBlank()) {
+        if (newClient.getId().isBlank()) {
             throw new ErrorCreatingClientException();
         }
 
@@ -41,7 +44,7 @@ public class ClientService implements IClientService {
     public void deleteClient(String id) {
         Optional<Client> registeredClient = clientRepository.findById(id);
 
-        if(!registeredClient.isPresent()){
+        if (!registeredClient.isPresent()) {
             throw new ClientNotFoundException();
         }
 
@@ -57,7 +60,7 @@ public class ClientService implements IClientService {
     public Client getClient(String id) {
         Optional<Client> client = clientRepository.findById(id);
 
-        if(!client.isPresent()) {
+        if (!client.isPresent()) {
             throw new ClientNotFoundException();
         }
 
@@ -65,8 +68,19 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public List<Client> listClients() {
-        return List.of();
+    public Page<ReturnAllClientsDto> listClients(Pageable pageable) {
+        return clientRepository.findAll(pageable)
+                .map(client -> new ReturnAllClientsDto(
+                        client.getId(),
+                        client.getFirstName(),
+                        client.getLastName(),
+                        client.getCpf(),
+                        client.getBirthday(),
+                        client.getEmail(),
+                        client.getPhone(),
+                        client.getAddress(),
+                        client.getCreatedAt()
+                ));
     }
 
     @Override
@@ -87,7 +101,7 @@ public class ClientService implements IClientService {
 
         Client modifiedClient = clientRepository.save(clientMounter);
 
-        if(modifiedClient.getId().isBlank()) {
+        if (modifiedClient.getId().isBlank()) {
             throw new ErrorCreatingClientException();
         }
 
