@@ -1,6 +1,7 @@
 package br.com.client.micro.controller;
 
 import br.com.client.micro.controller.dto.*;
+import br.com.client.micro.controller.dto.generic.ReturnClientListDto;
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -265,5 +268,30 @@ public class ClientController {
         Client client = clientService.getClient(id);
 
         return ResponseEntity.status(HttpStatus.OK).body(new ReturnClientInformationDto("Client information returned successfully!", client));
+    }
+
+    @Operation(
+            summary = "List clients",
+            description = "List",
+            tags = {"Client"},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Client list returned successfully!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ReturnClientListDto.class)
+                            )
+                    )
+            }
+    )
+    @GetMapping("/api/client/list")
+    public ResponseEntity<Page<ReturnAllClientsDto>> listClients(
+            @RequestParam(defaultValue = "0", required = false, name = "page") int page,
+            @RequestParam(defaultValue = "10", required = false, name = "size") int size
+    ) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<ReturnAllClientsDto> clients = clientService.listClients(pageRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(clients);
     }
 }
