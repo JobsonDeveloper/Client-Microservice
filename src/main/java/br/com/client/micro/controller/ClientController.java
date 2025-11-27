@@ -2,10 +2,9 @@ package br.com.client.micro.controller;
 
 import br.com.client.micro.controller.dto.*;
 import br.com.client.micro.domain.Client;
-import br.com.client.micro.exceptions.ClientNotFoundException;
-import br.com.client.micro.exceptions.ErrorDeletingClientException;
 import br.com.client.micro.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,7 +19,6 @@ import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 
 @RestController
 @Tag(name = "Client", description = "Client operations")
@@ -234,10 +232,38 @@ public class ClientController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new ModifiedClientDataDto("Client data modified successfully!", client));
     }
 
+    @Operation(
+            summary = "Get client information",
+            description = "Return all information of a client",
+            tags = {"Client"},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Client information returned successfully!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ReturnClientInformationDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Client not found!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            example = "{ \"status\": \"NOT_FOUND\", \"message\": \"Client not found!\" }"
+                                    )
+                            )
+                    )
+            }
+    )
     @GetMapping("/api/client/{id}/info")
-    public ResponseEntity<Client> getClientInfo(@PathVariable String id) {
+    public ResponseEntity<ReturnClientInformationDto> getClientInfo(
+            @Parameter(description = "Client id", required = true)
+            @PathVariable String id
+    ) {
         Client client = clientService.getClient(id);
 
-        return ResponseEntity.status(HttpStatus.OK).body(client);
+        return ResponseEntity.status(HttpStatus.OK).body(new ReturnClientInformationDto("Client information returned successfully!", client));
     }
 }
