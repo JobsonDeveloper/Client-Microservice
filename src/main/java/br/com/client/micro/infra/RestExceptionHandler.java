@@ -1,6 +1,6 @@
 package br.com.client.micro.infra;
 
-import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
+import br.com.client.micro.exceptions.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -18,12 +18,6 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
-
-    @ExceptionHandler(ClientAlreadyRegisteredException.class)
-    private ResponseEntity<DefaultErrorResponse> clientAlreadyRegisteredHandler(ClientAlreadyRegisteredException exception) {
-        DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(defaultErrorResponse);
-    }
 
     private Map<String, String> mapError(FieldError fieldError) {
         Map<String, String> mapping = new HashMap<>();
@@ -51,5 +45,27 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         response.put("errors", errors);
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(ClientAlreadyRegisteredException.class)
+    private ResponseEntity<DefaultErrorResponse> clientAlreadyRegisteredHandler(ClientAlreadyRegisteredException exception) {
+        DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(defaultErrorResponse);
+    }
+
+    @ExceptionHandler(ClientNotFoundException.class)
+    private ResponseEntity<DefaultErrorResponse> clientNotFoundHandler(ClientNotFoundException exception) {
+        DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.NOT_FOUND, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(defaultErrorResponse);
+    }
+
+    @ExceptionHandler({
+            ErrorDeletingClientException.class,
+            ErrorCreatingClientException.class,
+            ErrorModifyingClientDataException.class
+    })
+    private ResponseEntity<DefaultErrorResponse> errorDeletingClientHandler(RuntimeException exception) {
+        DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(defaultErrorResponse);
     }
 }

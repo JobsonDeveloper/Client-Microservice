@@ -1,7 +1,14 @@
 package br.com.client.micro.service;
 
+import br.com.client.micro.controller.dto.ReturnAllClientsDto;
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
+import br.com.client.micro.exceptions.ClientNotFoundException;
+import br.com.client.micro.exceptions.ErrorCreatingClientException;
+import br.com.client.micro.exceptions.ErrorDeletingClientException;
 import br.com.client.micro.repository.IClientRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,28 +25,86 @@ public class ClientService implements IClientService {
 
     @Override
     public Client createClient(Client client) {
+        Optional<Client> savedClient = clientRepository.findByCpf(client.getCpf());
+
+        if (savedClient.isPresent()) {
+            throw new ClientAlreadyRegisteredException();
+        }
+
         Client newClient = clientRepository.save(client);
+
+        if (newClient.getId().isBlank()) {
+            throw new ErrorCreatingClientException();
+        }
+
         return newClient;
     }
 
     @Override
-    public Boolean deleteClient(Long cpf) {
-        return null;
+    public void deleteClient(String id) {
+        Optional<Client> registeredClient = clientRepository.findById(id);
+
+        if (!registeredClient.isPresent()) {
+            throw new ClientNotFoundException();
+        }
+
+        clientRepository.deleteById(id);
+        Optional<Client> client = clientRepository.findById(id);
+
+        if (client.isPresent()) {
+            throw new ErrorDeletingClientException();
+        }
     }
 
     @Override
-    public Optional<Client> getClient(Long cpf) {
-        Optional<Client> client = clientRepository.findByCpf(cpf);
-        return client;
+    public Client getClient(String id) {
+        Optional<Client> client = clientRepository.findById(id);
+
+        if (!client.isPresent()) {
+            throw new ClientNotFoundException();
+        }
+
+        return client.get();
     }
 
     @Override
-    public List<Client> listClients() {
-        return List.of();
+    public Page<ReturnAllClientsDto> listClients(Pageable pageable) {
+        return clientRepository.findAll(pageable)
+                .map(client -> new ReturnAllClientsDto(
+                        client.getId(),
+                        client.getFirstName(),
+                        client.getLastName(),
+                        client.getCpf(),
+                        client.getBirthday(),
+                        client.getEmail(),
+                        client.getPhone(),
+                        client.getAddress(),
+                        client.getCreatedAt()
+                ));
     }
 
     @Override
     public Client updateClient(Client client) {
-        return null;
+        Optional<Client> savedClient = clientRepository.findById(client.getId());
+
+        if (!savedClient.isPresent()) {
+            throw new ClientNotFoundException();
+        }
+
+        Client clientMounter = savedClient.get();
+        clientMounter.setFirstName(client.getFirstName());
+        clientMounter.setLastName(client.getLastName());
+        clientMounter.setBirthday(client.getBirthday());
+        clientMounter.setEmail(client.getEmail());
+        clientMounter.setPhone(client.getPhone());
+        clientMounter.setAddress(client.getAddress());
+
+        Client modifiedClient = clientRepository.save(clientMounter);
+
+        if (modifiedClient.getId().isBlank()) {
+            throw new ErrorCreatingClientException();
+        }
+
+        return modifiedClient;
     }
 }
