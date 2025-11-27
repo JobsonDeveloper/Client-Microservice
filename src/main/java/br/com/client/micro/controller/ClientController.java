@@ -233,4 +233,11 @@ public class ClientController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new ModifiedClientDataDto("Client data modified successfully!", client));
     }
+
+    @GetMapping("/api/client/{id}/info")
+    public ResponseEntity<Client> getClientInfo(@PathVariable String id) {
+        Client client = clientService.getClient(id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(client);
+    }
 }
