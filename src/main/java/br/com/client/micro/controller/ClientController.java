@@ -1,7 +1,7 @@
 package br.com.client.micro.controller;
 
 import br.com.client.micro.controller.dto.*;
-import br.com.client.micro.controller.dto.generic.ReturnClientListDto;
+import br.com.client.micro.controller.dto.Swagger.PageClientResponseDto;
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +27,6 @@ import java.time.format.DateTimeFormatter;
 @Tag(name = "Client", description = "Client operations")
 public class ClientController {
     private final ClientService clientService;
-    private Client newClient;
 
     public ClientController(ClientService clientService) {
         this.clientService = clientService;
@@ -271,6 +270,7 @@ public class ClientController {
         return ResponseEntity.status(HttpStatus.OK).body(new ReturnClientInformationDto("Client information returned successfully!", client));
     }
 
+    @GetMapping("/api/client/list")
     @Operation(
             summary = "List clients",
             description = "List",
@@ -281,12 +281,13 @@ public class ClientController {
                             description = "Client list returned successfully!",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = ReturnClientListDto.class)
+                                    schema = @Schema(
+                                            implementation = PageClientResponseDto.class
+                                    )
                             )
                     )
             }
     )
-    @GetMapping("/api/client/list")
     public ResponseEntity<Page<ReturnAllClientsDto>> listClients(
             @RequestParam(defaultValue = "0", required = false, name = "page") int page,
             @RequestParam(defaultValue = "10", required = false, name = "size") int size
