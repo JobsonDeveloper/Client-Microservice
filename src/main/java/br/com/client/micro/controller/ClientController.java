@@ -111,7 +111,7 @@ public class ClientController {
         );
     }
 
-    @DeleteMapping("/api/client/delete")
+    @DeleteMapping("/api/client/{id}/delete")
     @Operation(
             summary = "Delete a client",
             description = "Removes a client from the system",
@@ -157,10 +157,11 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ClientDeletedSuccessfullyDto> deleteClient(@Valid @RequestBody DeleteClientDto clientDto) {
-        String clientId = clientDto.id();
-
-        clientService.deleteClient(clientId);
+    public ResponseEntity<ClientDeletedSuccessfullyDto> deleteClient(
+            @Parameter(description = "Client id", required = true)
+            @PathVariable String id
+    ) {
+        clientService.deleteClient(id);
 
         return ResponseEntity.status(HttpStatus.OK).body(new ClientDeletedSuccessfullyDto("Client deleted successfully!"));
     }
