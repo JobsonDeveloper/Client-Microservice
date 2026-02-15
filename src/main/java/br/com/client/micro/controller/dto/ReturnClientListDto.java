@@ -1,9 +1,6 @@
-package br.com.client.micro.controller.dto.generic;
-
-import br.com.client.micro.controller.dto.ReturnAllClientsDto;
+package br.com.client.micro.controller.dto;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public record ReturnClientListDto(
         ArrayList<ReturnAllClientsDto> content,
