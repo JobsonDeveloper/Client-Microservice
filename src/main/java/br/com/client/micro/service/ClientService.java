@@ -1,6 +1,5 @@
 package br.com.client.micro.service;
 
-import br.com.client.micro.controller.dto.ReturnAllClientsDto;
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import br.com.client.micro.exceptions.ClientNotFoundException;
@@ -11,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -68,9 +66,9 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public Page<ReturnAllClientsDto> listClients(Pageable pageable) {
+    public Page<Client> listClients(Pageable pageable) {
         return clientRepository.findAll(pageable)
-                .map(client -> new ReturnAllClientsDto(
+                .map(client -> new Client(
                         client.getId(),
                         client.getFirstName(),
                         client.getLastName(),
@@ -79,7 +77,8 @@ public class ClientService implements IClientService {
                         client.getEmail(),
                         client.getPhone(),
                         client.getAddress(),
-                        client.getCreatedAt()
+                        client.getCreatedAt(),
+                        client.getUpdatedAt()
                 ));
     }
 
