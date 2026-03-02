@@ -1,7 +1,6 @@
-package br.com.client.micro.controller.dto;
+package br.com.client.micro.dto.request;
 
 import jakarta.validation.constraints.*;
-import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
 

@@ -1,8 +1,10 @@
 package br.com.client.micro.controller;
 
-import br.com.client.micro.controller.dto.*;
-import br.com.client.micro.controller.dto.Swagger.PageClientResponseDto;
+import br.com.client.micro.dto.Swagger.PageClientResponseDto;
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.dto.request.ChangeClientDto;
+import br.com.client.micro.dto.request.CreateClientDto;
+import br.com.client.micro.dto.response.*;
 import br.com.client.micro.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,7 +46,7 @@ public class ClientController {
                             description = "Client created successfully!",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = ClientCreatedSuccessfullyDto.class)
+                                    schema = @Schema(implementation = ClientInfoDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -79,7 +81,7 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ClientCreatedSuccessfullyDto> createClient(@Valid @RequestBody CreateClientDto clientDto) throws ClientAlreadyRegisteredException {
+    public ResponseEntity<ClientInfoDto> createClient(@Valid @RequestBody CreateClientDto clientDto) throws ClientAlreadyRegisteredException {
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
         Long cpf = Long.parseLong(clientDto.cpf());
@@ -103,7 +105,7 @@ public class ClientController {
         Client newClient = clientService.createClient(client);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ClientCreatedSuccessfullyDto(
+                new ClientInfoDto(
                         "Client created successfully!",
                         newClient
                 )
@@ -176,7 +178,7 @@ public class ClientController {
                             description = "Client data modified successfully!",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = ModifiedClientDataDto.class)
+                                    schema = @Schema(implementation = ClientInfoDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -211,7 +213,7 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ModifiedClientDataDto> changeClient(@Valid @RequestBody ChangeClientDto clientDto) {
+    public ResponseEntity<ClientInfoDto> changeClient(@Valid @RequestBody ChangeClientDto clientDto) {
         String id = clientDto.id();
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
@@ -232,7 +234,7 @@ public class ClientController {
 
         Client client = clientService.updateClient(currentClient);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ModifiedClientDataDto("Client data modified successfully!", client));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ClientInfoDto("Client data modified successfully!", client));
     }
 
     @Operation(
@@ -245,7 +247,7 @@ public class ClientController {
                             description = "Client information returned successfully!",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = ReturnClientInformationDto.class)
+                                    schema = @Schema(implementation = ClientInfoDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -261,13 +263,13 @@ public class ClientController {
             }
     )
     @GetMapping("/api/client/{id}/info")
-    public ResponseEntity<ReturnClientInformationDto> getClientInfo(
+    public ResponseEntity<ClientInfoDto> getClientInfo(
             @Parameter(description = "Client id", required = true)
             @PathVariable String id
     ) {
         Client client = clientService.getClient(id);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new ReturnClientInformationDto("Client information returned successfully!", client));
+        return ResponseEntity.status(HttpStatus.OK).body(new ClientInfoDto("Client information returned successfully!", client));
     }
 
     @GetMapping("/api/client/list")
@@ -288,12 +290,12 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<Page<ReturnAllClientsDto>> listClients(
+    public ResponseEntity<Page<Client>> listClients(
             @RequestParam(defaultValue = "0", required = false, name = "page") int page,
             @RequestParam(defaultValue = "10", required = false, name = "size") int size
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<ReturnAllClientsDto> clients = clientService.listClients(pageRequest);
+        Page<Client> clients = clientService.listClients(pageRequest);
         return ResponseEntity.status(HttpStatus.OK).body(clients);
     }
 }
