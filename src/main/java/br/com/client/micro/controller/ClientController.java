@@ -1,14 +1,18 @@
 package br.com.client.micro.controller;
 
+import br.com.client.micro.domain.Address;
+import br.com.client.micro.domain.Phone;
 import br.com.client.micro.dto.Swagger.PageClientResponseDto;
 import br.com.client.micro.domain.Client;
-import br.com.client.micro.dto.request.ChangeClientDto;
+import br.com.client.micro.dto.request.ChangeClientDataDto;
 import br.com.client.micro.dto.request.CreateClientDto;
 import br.com.client.micro.dto.response.*;
+import br.com.client.micro.exceptions.DifferentPasswordsException;
 import br.com.client.micro.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -61,12 +65,19 @@ public class ClientController {
                     ),
                     @ApiResponse(
                             responseCode = "409",
-                            description = "Client already registered",
+                            description = "Conflict in the process",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"status\": \"CONFLICT\", \"message\": \"Client already registered!\" }"
-                                    )
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "Client already registered",
+                                                    value = "{ \"status\": \"CONFLICT\", \"message\": \"Client already registered!\" }"
+                                            ),
+                                            @ExampleObject(
+                                                    name = "Different passwords",
+                                                    value = "{ \"status\": \"CONFLICT\", \"message\": \"The password and the confirmation password must be equals!\" }"
+                                            )
+                                    }
                             )
                     ),
                     @ApiResponse(
@@ -84,13 +95,26 @@ public class ClientController {
     public ResponseEntity<ClientInfoDto> createClient(@Valid @RequestBody CreateClientDto clientDto) throws ClientAlreadyRegisteredException {
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
-        Long cpf = Long.parseLong(clientDto.cpf());
+        String cpf = clientDto.cpf();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate birthday = clientDto.birthday();
         String email = clientDto.email();
-        String phone = clientDto.phone();
-        String address = clientDto.address();
-        LocalDateTime createdAt = LocalDateTime.now();
+        String password = clientDto.password();
+        String confirmationPassword = clientDto.confirmationPassword();
+        Phone phone = Phone.builder()
+                .countryCode(clientDto.phone().countryCode())
+                .cityCode(clientDto.phone().cityCode())
+                .number(clientDto.phone().number())
+                .build();
+        Address address = Address.builder()
+                .cep(clientDto.address().cep())
+                .number(clientDto.address().number())
+                .complement(clientDto.address().complement())
+                .build();
+
+        if (!password.equals(confirmationPassword)) {
+            throw new DifferentPasswordsException();
+        }
 
         Client client = Client.builder()
                 .firstName(firstName)
@@ -100,8 +124,10 @@ public class ClientController {
                 .email(email)
                 .phone(phone)
                 .address(address)
-                .createdAt(createdAt)
+                .password(password)
+                .createdAt(LocalDateTime.now())
                 .build();
+
         Client newClient = clientService.createClient(client);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -163,11 +189,10 @@ public class ClientController {
             @PathVariable String id
     ) {
         clientService.deleteClient(id);
-
         return ResponseEntity.status(HttpStatus.OK).body(new ClientDeletedSuccessfullyDto("Client deleted successfully!"));
     }
 
-    @PutMapping("/api/client/update")
+    @PatchMapping("/api/client/update")
     @Operation(
             summary = "Update a user",
             description = "Update the data from a user of system",
@@ -213,21 +238,26 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ClientInfoDto> changeClient(@Valid @RequestBody ChangeClientDto clientDto) {
+    public ResponseEntity<ClientInfoDto> changeClientData(@Valid @RequestBody ChangeClientDataDto clientDto) {
         String id = clientDto.id();
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
         LocalDate birthday = clientDto.birthday();
-        String email = clientDto.email();
-        String phone = clientDto.phone();
-        String address = clientDto.address();
-
+        Phone phone = Phone.builder()
+                .countryCode(clientDto.phone().countryCode())
+                .cityCode(clientDto.phone().cityCode())
+                .number(clientDto.phone().number())
+                .build();
+        Address address = Address.builder()
+                .cep(clientDto.address().cep())
+                .number(clientDto.address().number())
+                .complement(clientDto.address().complement())
+                .build();
         Client currentClient = Client.builder()
                 .id(id)
                 .firstName(firstName)
                 .lastName(lastName)
                 .birthday(birthday)
-                .email(email)
                 .phone(phone)
                 .address(address)
                 .build();
@@ -268,7 +298,6 @@ public class ClientController {
             @PathVariable String id
     ) {
         Client client = clientService.getClient(id);
-
         return ResponseEntity.status(HttpStatus.OK).body(new ClientInfoDto("Client information returned successfully!", client));
     }
 

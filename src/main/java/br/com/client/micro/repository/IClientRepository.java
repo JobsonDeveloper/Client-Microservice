@@ -8,5 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface IClientRepository extends MongoRepository<Client, String> {
-    Optional<Client> findByCpf(Long cpf);
+    Optional<Client> findByCpf(String cpf);
+    Optional<Client> findByEmail(String email);
 }
