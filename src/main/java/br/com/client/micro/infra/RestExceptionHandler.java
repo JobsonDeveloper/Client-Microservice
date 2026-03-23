@@ -47,8 +47,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler(ClientAlreadyRegisteredException.class)
-    private ResponseEntity<DefaultErrorResponse> clientAlreadyRegisteredHandler(ClientAlreadyRegisteredException exception) {
+    @ExceptionHandler({
+            ClientAlreadyRegisteredException.class,
+            DifferentPasswordsException.class
+    })
+    private ResponseEntity<DefaultErrorResponse> conflictExceptionHandler(RuntimeException exception) {
         DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(defaultErrorResponse);
     }
