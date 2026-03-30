@@ -1,4 +1,4 @@
-package br.com.client.micro.controller.dto.Swagger;
+package br.com.client.micro.dto.Swagger;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

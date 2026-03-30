@@ -1,9 +1,11 @@
-package br.com.client.micro.controller.dto;
+package br.com.client.micro.dto.response;
+
+import br.com.client.micro.domain.Client;
 
 import java.util.ArrayList;
 
 public record ReturnClientListDto(
-        ArrayList<ReturnAllClientsDto> content,
+        ArrayList<Client> content,
         int page,
         int size,
         int totalElements,
