@@ -8,7 +8,7 @@ import br.com.client.micro.dto.request.ChangeClientDataDto;
 import br.com.client.micro.dto.request.CreateClientDto;
 import br.com.client.micro.dto.response.*;
 import br.com.client.micro.exceptions.DifferentPasswordsException;
-import br.com.client.micro.service.ClientService;
+import br.com.client.micro.service.imp.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

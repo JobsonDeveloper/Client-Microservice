@@ -1,4 +1,4 @@
-package br.com.client.micro.service;
+package br.com.client.micro.service.imp;
 
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
@@ -6,6 +6,7 @@ import br.com.client.micro.exceptions.ClientNotFoundException;
 import br.com.client.micro.exceptions.ErrorCreatingClientException;
 import br.com.client.micro.exceptions.ErrorDeletingClientException;
 import br.com.client.micro.repository.IClientRepository;
+import br.com.client.micro.service.IClientService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
