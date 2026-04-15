@@ -29,4 +29,12 @@ public class HtmlMessageTemplateService implements IHtmlMessageTemplateService {
 
         return templateEngine.process("email/deliveryCompleted", context);
     }
+
+    @Override
+    public String saleCanceledTemplate(String clientName) {
+        Context context = new Context();
+        context.setVariable("nome", clientName);
+
+        return templateEngine.process("email/saleCancelled", context);
+    }
 }
