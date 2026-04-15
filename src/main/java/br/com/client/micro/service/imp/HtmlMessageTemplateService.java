@@ -21,4 +21,12 @@ public class HtmlMessageTemplateService implements IHtmlMessageTemplateService {
 
         return templateEngine.process("email/paymentProcessed", context);
     }
+
+    @Override
+    public String deliveryCompletedTemplate(String clientName) {
+        Context context = new Context();
+        context.setVariable("nome", clientName);
+
+        return templateEngine.process("email/deliveryCompleted", context);
+    }
 }
