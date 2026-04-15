@@ -7,6 +7,7 @@ application.charset=UTF-8
 # Other microservices url
 product.micro.url=
 sales.micro.url=
+payment.micro.url=
 
 # Database
 MONGO_HOST=
@@ -29,9 +30,9 @@ spring.kafka.consumer.properties.spring.deserializer.value.delegate.class=org.sp
 spring.kafka.consumer.properties.spring.json.trusted.packages=*
 
 # AWS
-spring.mail.host=email-smtp.us-east-1.amazonaws.com
+spring.mail.host=
 spring.mail.port=587
 spring.mail.username=
 spring.mail.password=
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.auth=
+spring.mail.properties.mail.smtp.starttls.enable=
