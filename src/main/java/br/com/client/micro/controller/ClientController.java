@@ -23,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -2,7 +2,6 @@ package br.com.client.micro.event.consumer;
 
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.domain.Status;
-import br.com.client.micro.dto.response.PaymentInfoDto;
 import br.com.client.micro.event.dto.DeliveryEventDto;
 import br.com.client.micro.event.dto.PaymentEventDto;
 import br.com.client.micro.event.dto.SaleEventDto;
@@ -14,7 +13,6 @@ import br.com.client.micro.service.IEmailService;
 import br.com.client.micro.service.IHtmlMessageTemplateService;
 import feign.FeignException;
 import feign.FeignException.FeignClientException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
