@@ -1,9 +1,10 @@
 package br.com.client.micro.infra;
 
 import br.com.client.micro.exceptions.*;
+import com.mongodb.*;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -47,28 +48,56 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    private ResponseEntity<DefaultErrorResponse> responseConstructor(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .body(new DefaultErrorResponse(status, message));
+    }
+
     @ExceptionHandler({
             ClientAlreadyRegisteredException.class,
             DifferentPasswordsException.class
     })
-    private ResponseEntity<DefaultErrorResponse> conflictExceptionHandler(RuntimeException exception) {
-        DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(defaultErrorResponse);
+    private ResponseEntity<DefaultErrorResponse> conflictHandler(RuntimeException exception) {
+        return this.responseConstructor(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
     }
 
     @ExceptionHandler(ClientNotFoundException.class)
-    private ResponseEntity<DefaultErrorResponse> clientNotFoundHandler(ClientNotFoundException exception) {
-        DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.NOT_FOUND, exception.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(defaultErrorResponse);
+    private ResponseEntity<DefaultErrorResponse> notFoundHandler(RuntimeException exception) {
+        return this.responseConstructor(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+    }
+
+//    ----  System errors  ----
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    private ResponseEntity<DefaultErrorResponse> systemDuplicityOfDataHandler(RuntimeException exception) {
+        return this.responseConstructor(
+                HttpStatus.CONFLICT,
+                "This record has already been registered!"
+        );
     }
 
     @ExceptionHandler({
-            ErrorDeletingClientException.class,
-            ErrorCreatingClientException.class,
-            ErrorModifyingClientDataException.class
+            MongoException.class,
+            DataAccessException.class
     })
-    private ResponseEntity<DefaultErrorResponse> errorDeletingClientHandler(RuntimeException exception) {
-        DefaultErrorResponse defaultErrorResponse = new DefaultErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(defaultErrorResponse);
+    private ResponseEntity<DefaultErrorResponse> systemDatabaseAccessErrorHandler(RuntimeException exception) {
+        return this.responseConstructor(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Error connecting to the database!"
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    private ResponseEntity<DefaultErrorResponse> unmappedErrorsHandler(Exception exception) {
+        return this.responseConstructor(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Unexpected internal error!"
+        );
     }
 }
