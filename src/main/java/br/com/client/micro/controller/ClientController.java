@@ -92,7 +92,7 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ClientInfoDto> createClient(@Valid @RequestBody CreateClientDto clientDto) throws ClientAlreadyRegisteredException {
+    public ResponseEntity<ClientInfoDto> createClient(@Valid @RequestBody CreateClientDto clientDto) {
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
         String cpf = clientDto.cpf();
@@ -112,9 +112,7 @@ public class ClientController {
                 .complement(clientDto.address().complement())
                 .build();
 
-        if (!password.equals(confirmationPassword)) {
-            throw new DifferentPasswordsException();
-        }
+        if (!password.equals(confirmationPassword)) throw new DifferentPasswordsException();
 
         Client client = Client.builder()
                 .firstName(firstName)
@@ -189,7 +187,9 @@ public class ClientController {
             @PathVariable String id
     ) {
         clientService.deleteClient(id);
-        return ResponseEntity.status(HttpStatus.OK).body(new ClientDeletedSuccessfullyDto("Client deleted successfully!"));
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ClientDeletedSuccessfullyDto("Client deleted successfully!")
+        );
     }
 
     @PatchMapping("/api/client/update")
@@ -264,7 +264,12 @@ public class ClientController {
 
         Client client = clientService.updateClient(currentClient);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ClientInfoDto("Client data modified successfully!", client));
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ClientInfoDto(
+                        "Client data modified successfully!",
+                        client
+                )
+        );
     }
 
     @Operation(
@@ -298,7 +303,12 @@ public class ClientController {
             @PathVariable String id
     ) {
         Client client = clientService.getClient(id);
-        return ResponseEntity.status(HttpStatus.OK).body(new ClientInfoDto("Client information returned successfully!", client));
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ClientInfoDto(
+                        "Client information returned successfully!",
+                        client
+                )
+        );
     }
 
     @GetMapping("/api/client/list")
