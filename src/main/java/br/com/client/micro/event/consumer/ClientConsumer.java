@@ -12,6 +12,7 @@ import br.com.client.micro.repository.IClientRepository;
 import br.com.client.micro.service.IClientPayment;
 import br.com.client.micro.service.IEmailService;
 import br.com.client.micro.service.IHtmlMessageTemplateService;
+import feign.FeignException;
 import feign.FeignException.FeignClientException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -42,7 +43,6 @@ public class ClientConsumer {
     )
     public void saleListener(PaymentEventDto event) {
         String clientId = event.clientId();
-        String saleId = event.saleId();
         Status status = event.status();
 
         if (!status.equals(Status.PAID)) return;
@@ -64,7 +64,6 @@ public class ClientConsumer {
             containerFactory = "deliveryKafkaListenerFactory"
     )
     public void deliveryListener(DeliveryEventDto event) {
-        String saleId = event.saleId();
         String clientId = event.clientId();
         Status status = event.status();
 
@@ -87,15 +86,16 @@ public class ClientConsumer {
             containerFactory = "saleKafkaListenerFactory"
     )
     public void saleListener(SaleEventDto event) {
-        String id = event.id();
+        String saleId = event.id();
         String clientId = event.clientId();
         Status status = event.status();
-        PaymentInfoDto payment = null;
 
         if (!status.equals(Status.CANCELED)) return;
 
         try {
-            payment = iClientPayment.getPaymentInfo(id);
+            iClientPayment.getPaymentInfo(saleId);
+        }  catch (FeignException.NotFound e){
+            return;
         } catch (FeignClientException e) {
             throw new ErrorGettingPaymentInfoException("It was not possible to get payment info!");
         }
