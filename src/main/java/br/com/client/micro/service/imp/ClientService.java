@@ -3,16 +3,12 @@ package br.com.client.micro.service.imp;
 import br.com.client.micro.domain.Client;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import br.com.client.micro.exceptions.ClientNotFoundException;
-import br.com.client.micro.exceptions.ErrorCreatingClientException;
-import br.com.client.micro.exceptions.ErrorDeletingClientException;
 import br.com.client.micro.repository.IClientRepository;
 import br.com.client.micro.service.IClientService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 public class ClientService implements IClientService {
@@ -25,47 +21,21 @@ public class ClientService implements IClientService {
 
     @Override
     public Client createClient(Client client) {
-        Optional<Client> clientByCpf = clientRepository.findByCpf(client.getCpf());
-        Optional<Client> clientByEmail = clientRepository.findByEmail(client.getEmail());
+        clientRepository.findByCpf(client.getCpf()).orElseThrow(ClientAlreadyRegisteredException::new);
+        clientRepository.findByEmail(client.getEmail()).orElseThrow(ClientAlreadyRegisteredException::new);
 
-        if (clientByCpf.isPresent() || clientByEmail.isPresent()) {
-            throw new ClientAlreadyRegisteredException();
-        }
-
-        Client newClient = clientRepository.save(client);
-
-        if (newClient.getId().isBlank()) {
-            throw new ErrorCreatingClientException();
-        }
-
-        return newClient;
+        return clientRepository.save(client);
     }
 
     @Override
     public void deleteClient(String id) {
-        Optional<Client> registeredClient = clientRepository.findById(id);
-
-        if (!registeredClient.isPresent()) {
-            throw new ClientNotFoundException();
-        }
-
+        clientRepository.findById(id).orElseThrow(ClientNotFoundException::new);
         clientRepository.deleteById(id);
-        Optional<Client> client = clientRepository.findById(id);
-
-        if (client.isPresent()) {
-            throw new ErrorDeletingClientException();
-        }
     }
 
     @Override
     public Client getClient(String id) {
-        Optional<Client> client = clientRepository.findById(id);
-
-        if (!client.isPresent()) {
-            throw new ClientNotFoundException();
-        }
-
-        return client.get();
+        return clientRepository.findById(id).orElseThrow(ClientNotFoundException::new);
     }
 
     @Override
@@ -88,32 +58,22 @@ public class ClientService implements IClientService {
 
     @Override
     public Client updateClient(Client client) {
-        Optional<Client> savedClient = clientRepository.findById(client.getId());
-
-        if (!savedClient.isPresent()) {
-            throw new ClientNotFoundException();
-        }
+        Client savedClient = clientRepository.findById(client.getId()).orElseThrow(ClientNotFoundException::new);
 
         Client clientMounter = Client.builder()
-                .id(savedClient.get().getId())
+                .id(savedClient.getId())
                 .firstName(client.getFirstName())
                 .lastName(client.getLastName())
-                .cpf(savedClient.get().getCpf())
+                .cpf(savedClient.getCpf())
                 .birthday(client.getBirthday())
-                .email(savedClient.get().getEmail())
+                .email(savedClient.getEmail())
                 .phone(client.getPhone())
                 .address(client.getAddress())
-                .password(savedClient.get().getPassword())
-                .createdAt(savedClient.get().getCreatedAt())
+                .password(savedClient.getPassword())
+                .createdAt(savedClient.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        Client modifiedClient = clientRepository.save(clientMounter);
-
-        if (modifiedClient.getId().isBlank()) {
-            throw new ErrorCreatingClientException();
-        }
-
-        return modifiedClient;
+        return clientRepository.save(clientMounter);
     }
 }
