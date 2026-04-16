@@ -4,6 +4,8 @@ import br.com.client.micro.service.IHtmlMessageTemplateService;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class HtmlMessageTemplateService implements IHtmlMessageTemplateService {
@@ -14,27 +16,30 @@ public class HtmlMessageTemplateService implements IHtmlMessageTemplateService {
         this.templateEngine = templateEngine;
     }
 
+    public String templateConstructor(HashMap<String, String> variables, String templatePath) {
+        Context context = new Context();
+        variables.forEach(context::setVariable);
+        return templateEngine.process(templatePath, context);
+    }
+
     @Override
     public String paymentProcessedTemplate(String clientName) {
-        Context context = new Context();
-        context.setVariable("nome", clientName);
-
-        return templateEngine.process("email/paymentProcessed", context);
+        return templateConstructor(new HashMap<>(
+                Map.of("nome", clientName)
+        ), "email/paymentProcessed");
     }
 
     @Override
     public String deliveryCompletedTemplate(String clientName) {
-        Context context = new Context();
-        context.setVariable("nome", clientName);
-
-        return templateEngine.process("email/deliveryCompleted", context);
+        return templateConstructor(new HashMap<>(
+                Map.of("nome", clientName)
+        ), "email/deliveryCompleted");
     }
 
     @Override
     public String saleCanceledTemplate(String clientName) {
-        Context context = new Context();
-        context.setVariable("nome", clientName);
-
-        return templateEngine.process("email/saleCancelled", context);
+        return templateConstructor(new HashMap<>(
+                Map.of("nome", clientName)
+        ), "email/saleCancelled");
     }
 }
