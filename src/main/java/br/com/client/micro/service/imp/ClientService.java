@@ -8,7 +8,9 @@ import br.com.client.micro.service.IClientService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class ClientService implements IClientService {
@@ -21,8 +23,11 @@ public class ClientService implements IClientService {
 
     @Override
     public Client createClient(Client client) {
-        clientRepository.findByCpf(client.getCpf()).orElseThrow(ClientAlreadyRegisteredException::new);
-        clientRepository.findByEmail(client.getEmail()).orElseThrow(ClientAlreadyRegisteredException::new);
+        boolean clientByCpf = clientRepository.existsByCpf(client.getCpf());
+        if (clientByCpf) throw new ClientAlreadyRegisteredException();
+
+        boolean clientByEmail = clientRepository.existsByEmail(client.getEmail());
+        if (clientByEmail) throw new ClientAlreadyRegisteredException();
 
         return clientRepository.save(client);
     }

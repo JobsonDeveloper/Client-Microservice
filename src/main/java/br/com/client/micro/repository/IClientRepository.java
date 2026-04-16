@@ -4,10 +4,8 @@ import br.com.client.micro.domain.Client;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 @Repository
 public interface IClientRepository extends MongoRepository<Client, String> {
-    Optional<Client> findByCpf(String cpf);
-    Optional<Client> findByEmail(String email);
+    public boolean existsByCpf(String cpf);
+    public boolean existsByEmail(String email);
 }
