@@ -2,8 +2,10 @@ package br.com.client.micro.controller;
 
 import br.com.client.micro.domain.Address;
 import br.com.client.micro.domain.Phone;
-import br.com.client.micro.dto.Swagger.PageClientResponseDto;
+import br.com.client.micro.dto.swagger.DefaultErrorResponseDto;
+import br.com.client.micro.dto.swagger.PageClientResponseDto;
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.dto.swagger.validation.fields.FieldsErrorDto;
 import br.com.client.micro.dto.request.ChangeClientDataDto;
 import br.com.client.micro.dto.request.CreateClientDto;
 import br.com.client.micro.dto.response.*;
@@ -12,7 +14,6 @@ import br.com.client.micro.service.imp.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,7 +47,7 @@ public class ClientController {
             responses = {
                     @ApiResponse(
                             responseCode = "201",
-                            description = "Client created successfully!",
+                            description = "Client created successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ClientInfoDto.class)
@@ -54,12 +55,10 @@ public class ClientController {
                     ),
                     @ApiResponse(
                             responseCode = "400",
-                            description = "Invalid data",
+                            description = "Inconsistent request fields",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"error\": \"Validation failed\", \"errors\": \"[...]\" }"
-                                    )
+                                    schema = @Schema(implementation = FieldsErrorDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -67,26 +66,23 @@ public class ClientController {
                             description = "Conflict in the process",
                             content = @Content(
                                     mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(
-                                                    name = "Client already registered",
-                                                    value = "{ \"status\": \"CONFLICT\", \"message\": \"Client already registered!\" }"
-                                            ),
-                                            @ExampleObject(
-                                                    name = "Different passwords",
-                                                    value = "{ \"status\": \"CONFLICT\", \"message\": \"The password and the confirmation password must be equals!\" }"
-                                            )
-                                    }
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     ),
                     @ApiResponse(
                             responseCode = "500",
-                            description = "It was not possible to create the client",
+                            description = "Internal Server Error",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"It was not possible to create the client!\" }"
-                                    )
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "503",
+                            description = "Service Unavailable",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     )
             }
@@ -138,12 +134,12 @@ public class ClientController {
     @DeleteMapping("/api/client/{id}/delete")
     @Operation(
             summary = "Delete a client",
-            description = "Removes a client from the system",
+            description = "Delete a client of the system",
             tags = {"Client"},
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Client deleted successfully!",
+                            description = "Client deleted successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ClientDeletedSuccessfullyDto.class)
@@ -151,32 +147,34 @@ public class ClientController {
                     ),
                     @ApiResponse(
                             responseCode = "400",
-                            description = "Invalid data",
+                            description = "Inconsistent request fields",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"error\": \"Validation failed\", \"errors\": \"[...]\" }"
-                                    )
+                                    schema = @Schema(implementation = FieldsErrorDto.class)
                             )
                     ),
                     @ApiResponse(
                             responseCode = "404",
-                            description = "Client not found!",
+                            description = "Client not found",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"status\": \"NOT_FOUND\", \"message\": \"Client not found!\" }"
-                                    )
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     ),
                     @ApiResponse(
                             responseCode = "500",
-                            description = "We were unable to delete the client",
+                            description = "Internal Server Error",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"We were unable to delete the client!\" }"
-                                    )
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "503",
+                            description = "Service Unavailable",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     )
             }
@@ -193,13 +191,13 @@ public class ClientController {
 
     @PatchMapping("/api/client/update")
     @Operation(
-            summary = "Update a user",
-            description = "Update the data from a user of system",
+            summary = "Update client information",
+            description = "Update the information of a client",
             tags = {"Client"},
             responses = {
                     @ApiResponse(
                             responseCode = "201",
-                            description = "Client data modified successfully!",
+                            description = "Client information updated successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ClientInfoDto.class)
@@ -207,37 +205,39 @@ public class ClientController {
                     ),
                     @ApiResponse(
                             responseCode = "400",
-                            description = "Invalid data",
+                            description = "Inconsistent request fields",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"error\": \"Validation failed\", \"errors\": \"[...]\" }"
-                                    )
+                                    schema = @Schema(implementation = FieldsErrorDto.class)
                             )
                     ),
                     @ApiResponse(
                             responseCode = "404",
-                            description = "Client not found!",
+                            description = "Client not found",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"status\": \"NOT_FOUND\", \"message\": \"Client not found!\" }"
-                                    )
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     ),
                     @ApiResponse(
                             responseCode = "500",
-                            description = "It was not possible to modify the client data!",
+                            description = "Internal Server Error",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"status\": \"INTERNAL_SERVER_ERROR\", \"message\": \"It was not possible to modify the client data!\" }"
-                                    )
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "503",
+                            description = "Service Unavailable",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     )
             }
     )
-    public ResponseEntity<ClientInfoDto> changeClientData(@Valid @RequestBody ChangeClientDataDto clientDto) {
+    public ResponseEntity<ClientInfoDto> updateClientData(@Valid @RequestBody ChangeClientDataDto clientDto) {
         String id = clientDto.id();
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
@@ -265,7 +265,7 @@ public class ClientController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ClientInfoDto(
-                        "Client data modified successfully!",
+                        "Client information updated successfully!",
                         client
                 )
         );
@@ -278,7 +278,7 @@ public class ClientController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Client information returned successfully!",
+                            description = "Client information returned successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = ClientInfoDto.class)
@@ -286,12 +286,26 @@ public class ClientController {
                     ),
                     @ApiResponse(
                             responseCode = "404",
-                            description = "Client not found!",
+                            description = "Client not found",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(
-                                            example = "{ \"status\": \"NOT_FOUND\", \"message\": \"Client not found!\" }"
-                                    )
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal Server Error",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "503",
+                            description = "Service Unavailable",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     )
             }
@@ -313,17 +327,33 @@ public class ClientController {
     @GetMapping("/api/client/list")
     @Operation(
             summary = "List clients",
-            description = "List",
+            description = "Return a list of clients",
             tags = {"Client"},
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Client list returned successfully!",
+                            description = "Client list returned successfully",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(
                                             implementation = PageClientResponseDto.class
                                     )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal Server Error",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "503",
+                            description = "Service Unavailable",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     )
             }
