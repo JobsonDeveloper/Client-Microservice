@@ -1,4 +1,4 @@
-package br.com.client.micro.dto.Swagger;
+package br.com.client.micro.dto.swagger;
 
 import br.com.client.micro.domain.Client;
 import io.swagger.v3.oas.annotations.media.Schema;
