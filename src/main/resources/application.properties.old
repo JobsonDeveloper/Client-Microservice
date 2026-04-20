@@ -8,6 +8,8 @@ application.charset=UTF-8
 product.micro.url=
 sales.micro.url=
 payment.micro.url=
+application.public.key=
+application.private.key=
 
 # Database
 MONGO_HOST=
@@ -31,7 +33,7 @@ spring.kafka.consumer.properties.spring.json.trusted.packages=*
 
 # AWS
 spring.mail.host=
-spring.mail.port=587
+spring.mail.port=
 spring.mail.username=
 spring.mail.password=
 spring.mail.properties.mail.smtp.auth=
