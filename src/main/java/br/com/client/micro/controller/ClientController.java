@@ -1,7 +1,7 @@
 package br.com.client.micro.controller;
 
-import br.com.client.micro.domain.Address;
-import br.com.client.micro.domain.Phone;
+import br.com.client.micro.domain.complements.Address;
+import br.com.client.micro.domain.complements.Phone;
 import br.com.client.micro.dto.swagger.DefaultErrorResponseDto;
 import br.com.client.micro.dto.swagger.PageClientResponseDto;
 import br.com.client.micro.domain.Client;
@@ -103,6 +103,9 @@ public class ClientController {
                 .build();
         Address address = Address.builder()
                 .cep(clientDto.address().cep())
+                .state(clientDto.address().state())
+                .city(clientDto.address().city())
+                .street(clientDto.address().street())
                 .number(clientDto.address().number())
                 .complement(clientDto.address().complement())
                 .build();
@@ -249,6 +252,9 @@ public class ClientController {
                 .build();
         Address address = Address.builder()
                 .cep(clientDto.address().cep())
+                .state(clientDto.address().state())
+                .city(clientDto.address().city())
+                .street(clientDto.address().street())
                 .number(clientDto.address().number())
                 .complement(clientDto.address().complement())
                 .build();
