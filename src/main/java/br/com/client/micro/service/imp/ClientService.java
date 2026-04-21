@@ -1,9 +1,13 @@
 package br.com.client.micro.service.imp;
 
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.domain.Role;
+import br.com.client.micro.dto.response.ClientsDto;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import br.com.client.micro.exceptions.ClientNotFoundException;
+import br.com.client.micro.exceptions.RoleNotFoundException;
 import br.com.client.micro.repository.IClientRepository;
+import br.com.client.micro.repository.IRoleRepository;
 import br.com.client.micro.service.IClientService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,9 +19,14 @@ import java.time.LocalDateTime;
 public class ClientService implements IClientService {
 
     private final IClientRepository clientRepository;
+    private final IRoleRepository iRoleRepository;
 
-    public ClientService(IClientRepository clientRepository) {
+    public ClientService(
+            IClientRepository clientRepository,
+            IRoleRepository iRoleRepository
+    ) {
         this.clientRepository = clientRepository;
+        this.iRoleRepository = iRoleRepository;
     }
 
     @Override
@@ -28,6 +37,8 @@ public class ClientService implements IClientService {
         boolean clientByEmail = clientRepository.existsByEmail(client.getEmail());
         if (clientByEmail) throw new ClientAlreadyRegisteredException();
 
+        Role role = iRoleRepository.findByName("BASIC").orElseThrow(RoleNotFoundException::new);
+        client.setRole(role);
         return clientRepository.save(client);
     }
 
@@ -43,21 +54,9 @@ public class ClientService implements IClientService {
     }
 
     @Override
-    public Page<Client> listClients(Pageable pageable) {
+    public Page<ClientsDto> listClients(Pageable pageable) {
         return clientRepository.findAll(pageable)
-                .map(client -> new Client(
-                        client.getId(),
-                        client.getFirstName(),
-                        client.getLastName(),
-                        client.getCpf(),
-                        client.getBirthday(),
-                        client.getEmail(),
-                        client.getPhone(),
-                        client.getAddress(),
-                        client.getPassword(),
-                        client.getCreatedAt(),
-                        client.getUpdatedAt()
-                ));
+                .map(ClientsDto::new);
     }
 
     @Override
@@ -73,6 +72,7 @@ public class ClientService implements IClientService {
                 .email(savedClient.getEmail())
                 .phone(client.getPhone())
                 .address(client.getAddress())
+                .role(savedClient.getRole())
                 .password(savedClient.getPassword())
                 .createdAt(savedClient.getCreatedAt())
                 .updatedAt(LocalDateTime.now())

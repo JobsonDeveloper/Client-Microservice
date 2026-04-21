@@ -31,6 +31,7 @@ public class Client {
     private String email;
     private Phone phone;
     private Address address;
+    private Role role;
     private String password;
 
     @CreatedDate

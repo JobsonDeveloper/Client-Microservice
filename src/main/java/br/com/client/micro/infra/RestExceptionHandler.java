@@ -64,10 +64,21 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
-    @ExceptionHandler(ClientNotFoundException.class)
+    @ExceptionHandler({
+            ClientNotFoundException.class,
+            RoleNotFoundException.class
+    })
     private ResponseEntity<DefaultErrorResponse> notFoundHandler(RuntimeException exception) {
         return this.responseConstructor(
                 HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+    }
+
+    @ExceptionHandler(ErrorExecutingOperationException.class)
+    private ResponseEntity<DefaultErrorResponse> applicationErrorHandler(RuntimeException exception) {
+        return this.responseConstructor(
+                HttpStatus.INTERNAL_SERVER_ERROR,
                 exception.getMessage()
         );
     }

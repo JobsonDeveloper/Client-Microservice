@@ -1,5 +1,6 @@
 package br.com.client.micro.controller;
 
+import br.com.client.micro.domain.Role;
 import br.com.client.micro.domain.complements.Address;
 import br.com.client.micro.domain.complements.Phone;
 import br.com.client.micro.dto.swagger.DefaultErrorResponseDto;
@@ -10,6 +11,8 @@ import br.com.client.micro.dto.request.ChangeClientDataDto;
 import br.com.client.micro.dto.request.CreateClientDto;
 import br.com.client.micro.dto.response.*;
 import br.com.client.micro.exceptions.DifferentPasswordsException;
+import br.com.client.micro.exceptions.ErrorExecutingOperationException;
+import br.com.client.micro.repository.IRoleRepository;
 import br.com.client.micro.service.imp.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,14 +31,20 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RestController
 @Tag(name = "Client", description = "Client operations")
 public class ClientController {
     private final ClientService clientService;
+    private final IRoleRepository iRoleRepository;
 
-    public ClientController(ClientService clientService) {
+    public ClientController(
+            ClientService clientService,
+            IRoleRepository iRoleRepository
+    ) {
         this.clientService = clientService;
+        this.iRoleRepository = iRoleRepository;
     }
 
     @PostMapping("/api/client/create")
@@ -91,7 +100,6 @@ public class ClientController {
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
         String cpf = clientDto.cpf();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate birthday = clientDto.birthday();
         String email = clientDto.email();
         String password = clientDto.password();
@@ -111,6 +119,12 @@ public class ClientController {
                 .build();
 
         if (!password.equals(confirmationPassword)) throw new DifferentPasswordsException();
+
+        Role basicRole = iRoleRepository.findByName("BASIC").orElseThrow(ErrorExecutingOperationException::new);
+
+        Role role = Role.builder()
+                .name(basicRole.toString())
+                .build();
 
         Client client = Client.builder()
                 .firstName(firstName)
@@ -364,12 +378,12 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<Page<Client>> listClients(
+    public ResponseEntity<PageClientResponseDto> listClients(
             @RequestParam(defaultValue = "0", required = false, name = "page") int page,
             @RequestParam(defaultValue = "10", required = false, name = "size") int size
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<Client> clients = clientService.listClients(pageRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(clients);
+        Page<ClientsDto> clients = clientService.listClients(pageRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(PageClientResponseDto.from(clients));
     }
 }
