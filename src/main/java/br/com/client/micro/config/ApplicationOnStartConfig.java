@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,8 +31,14 @@ public class ApplicationOnStartConfig {
 
     private final IRoleRepository iRoleRepository;
 
-    public ApplicationOnStartConfig(IRoleRepository iRoleRepository) {
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public ApplicationOnStartConfig(
+            IRoleRepository iRoleRepository,
+            BCryptPasswordEncoder passwordEncoder
+    ) {
         this.iRoleRepository = iRoleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
@@ -54,14 +61,15 @@ public class ApplicationOnStartConfig {
     public ApplicationRunner initAdmin(IClientRepository iClientRepository) {
         return args -> {
             boolean registeredClient = iClientRepository.existsByEmail(companyEmail);
-            if(registeredClient) return;
+            if (registeredClient) return;
 
             Role role = iRoleRepository.findByName("ADMIN").orElseThrow(RoleNotFoundException::new);
 
             String firstName = "General";
             String lastName = "Admin";
             LocalDate birthday = LocalDate.now();
-            String password = "@Esale2026";
+            String password = passwordEncoder.encode("@Esale2026");
+
             Client client = Client.builder()
                     .firstName(firstName)
                     .lastName(lastName)

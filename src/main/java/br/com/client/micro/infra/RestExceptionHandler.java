@@ -66,7 +66,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler({
             ClientNotFoundException.class,
-            RoleNotFoundException.class
+            RoleNotFoundException.class,
+            SessionNotFoundException.class
     })
     private ResponseEntity<DefaultErrorResponse> notFoundHandler(RuntimeException exception) {
         return this.responseConstructor(
