@@ -1,7 +1,9 @@
 package br.com.client.micro.service;
 
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.dto.response.ClientAuthDto;
 import br.com.client.micro.dto.response.ClientDto;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,4 +13,5 @@ public interface IClientService {
     public Client getClient(String id);
     public Page<ClientDto> listClients(Pageable pageable);
     public Client updateClient(Client client);
+    public Client getClientByEmail(String email);
 }

@@ -53,6 +53,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(new DefaultErrorResponse(status, message));
     }
 
+    @ExceptionHandler(PermissionDeniedException.class)
+    private ResponseEntity<DefaultErrorResponse> permissionDeniedHandler(RuntimeException exception) {
+        return this.responseConstructor(
+                HttpStatus.UNAUTHORIZED,
+                exception.getMessage()
+        );
+    }
+
     @ExceptionHandler({
             ClientAlreadyRegisteredException.class,
             DifferentPasswordsException.class
