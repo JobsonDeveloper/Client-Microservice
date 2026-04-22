@@ -1,7 +1,6 @@
 package br.com.client.micro.dto.swagger;
 
-import br.com.client.micro.domain.Client;
-import br.com.client.micro.dto.response.ClientsDto;
+import br.com.client.micro.dto.response.ClientDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,14 +13,14 @@ import java.util.List;
 @Schema(description = "Paginated response")
 public class PageClientResponseDto {
 
-    private List<ClientsDto> content;
+    private List<ClientDto> content;
     private PageableResponseDto pageable;
     private boolean last;
     private int totalPages;
     private long totalElements;
     private int size;
 
-    public static PageClientResponseDto from(Page<ClientsDto> page) {
+    public static PageClientResponseDto from(Page<ClientDto> page) {
         PageClientResponseDto dto = new PageClientResponseDto();
 
         dto.setContent(page.getContent());

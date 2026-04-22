@@ -1,6 +1,7 @@
 package br.com.client.micro.controller;
 
 import br.com.client.micro.domain.Role;
+import br.com.client.micro.domain.Session;
 import br.com.client.micro.domain.complements.Address;
 import br.com.client.micro.domain.complements.Phone;
 import br.com.client.micro.dto.swagger.DefaultErrorResponseDto;
@@ -11,43 +12,53 @@ import br.com.client.micro.dto.request.ChangeClientDataDto;
 import br.com.client.micro.dto.request.CreateClientDto;
 import br.com.client.micro.dto.response.*;
 import br.com.client.micro.exceptions.DifferentPasswordsException;
-import br.com.client.micro.exceptions.ErrorExecutingOperationException;
-import br.com.client.micro.repository.IRoleRepository;
+import br.com.client.micro.service.IRoleService;
+import br.com.client.micro.service.ISessionService;
 import br.com.client.micro.service.imp.ClientService;
+import br.com.client.micro.util.TokenGenerator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @RestController
 @Tag(name = "Client", description = "Client operations")
 public class ClientController {
     private final ClientService clientService;
-    private final IRoleRepository iRoleRepository;
+    private final TokenGenerator tokenGenerator;
+    private final ISessionService iSessionService;
+    private final IRoleService iRoleService;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public ClientController(
             ClientService clientService,
-            IRoleRepository iRoleRepository
+            TokenGenerator tokenGenerator,
+            ISessionService iSessionService,
+            IRoleService iRoleService,
+            BCryptPasswordEncoder passwordEncoder
     ) {
         this.clientService = clientService;
-        this.iRoleRepository = iRoleRepository;
+        this.tokenGenerator = tokenGenerator;
+        this.iSessionService = iSessionService;
+        this.iRoleService = iRoleService;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/api/client/create")
+    @PostMapping("/api/client/register")
     @Transactional
     @Operation(
             summary = "Create a client",
@@ -56,10 +67,10 @@ public class ClientController {
             responses = {
                     @ApiResponse(
                             responseCode = "201",
-                            description = "Client created successfully",
+                            description = "Client registered successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = ClientInfoDto.class)
+                                    schema = @Schema(implementation = ClientAuthDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -68,6 +79,14 @@ public class ClientController {
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = FieldsErrorDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Internal resource not found!",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -96,7 +115,7 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ClientInfoDto> createClient(@Valid @RequestBody CreateClientDto clientDto) {
+    public ResponseEntity<ClientAuthDto> register(@Valid @RequestBody CreateClientDto clientDto, HttpServletRequest request) {
         String firstName = clientDto.firstName();
         String lastName = clientDto.lastName();
         String cpf = clientDto.cpf();
@@ -120,12 +139,8 @@ public class ClientController {
 
         if (!password.equals(confirmationPassword)) throw new DifferentPasswordsException();
 
-        Role basicRole = iRoleRepository.findByName("BASIC").orElseThrow(ErrorExecutingOperationException::new);
-
-        Role role = Role.builder()
-                .name(basicRole.toString())
-                .build();
-
+        Role role = iRoleService.findByName("BASIC");
+        String encodedPassword = passwordEncoder.encode(password);
         Client client = Client.builder()
                 .firstName(firstName)
                 .lastName(lastName)
@@ -134,16 +149,20 @@ public class ClientController {
                 .email(email)
                 .phone(phone)
                 .address(address)
-                .password(password)
+                .role(role)
+                .password(encodedPassword)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         Client newClient = clientService.createClient(client);
+        Session session = iSessionService.startSession(newClient.getId(), request);
+        String token = tokenGenerator.tokenConstructor(newClient.getId(), session.getId(), newClient.getRole().getId());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ClientInfoDto(
-                        "Client created successfully!",
-                        newClient
+                new ClientAuthDto(
+                        "Client registered successfully!",
+                        new ClientDto(newClient),
+                        token
                 )
         );
     }
@@ -159,7 +178,7 @@ public class ClientController {
                             description = "Client deleted successfully",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = ClientDeletedSuccessfullyDto.class)
+                                    schema = @Schema(implementation = ResponseMessageDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -196,13 +215,13 @@ public class ClientController {
                     )
             }
     )
-    public ResponseEntity<ClientDeletedSuccessfullyDto> deleteClient(
+    public ResponseEntity<ResponseMessageDto> deleteClient(
             @Parameter(description = "Client id", required = true)
             @PathVariable String id
     ) {
         clientService.deleteClient(id);
         return ResponseEntity.status(HttpStatus.OK).body(
-                new ClientDeletedSuccessfullyDto("Client deleted successfully!")
+                new ResponseMessageDto("Client deleted successfully!")
         );
     }
 
@@ -286,7 +305,7 @@ public class ClientController {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ClientInfoDto(
                         "Client information updated successfully!",
-                        client
+                        new ClientDto(client)
                 )
         );
     }
@@ -339,7 +358,7 @@ public class ClientController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ClientInfoDto(
                         "Client information returned successfully!",
-                        client
+                        new ClientDto(client)
                 )
         );
     }
@@ -383,7 +402,7 @@ public class ClientController {
             @RequestParam(defaultValue = "10", required = false, name = "size") int size
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<ClientsDto> clients = clientService.listClients(pageRequest);
+        Page<ClientDto> clients = clientService.listClients(pageRequest);
         return ResponseEntity.status(HttpStatus.OK).body(PageClientResponseDto.from(clients));
     }
 }

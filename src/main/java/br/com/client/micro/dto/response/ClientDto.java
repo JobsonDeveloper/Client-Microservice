@@ -8,7 +8,7 @@ import br.com.client.micro.domain.complements.Phone;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public record ClientsDto(
+public record ClientDto(
         String id,
         String firstName,
         String lastName,
@@ -21,7 +21,7 @@ public record ClientsDto(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public ClientsDto(Client client) {
+    public ClientDto(Client client) {
         this(
                 client.getId(),
                 client.getFirstName(),
