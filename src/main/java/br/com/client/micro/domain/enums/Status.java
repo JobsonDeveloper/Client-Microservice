@@ -1,4 +1,4 @@
-package br.com.client.micro.domain;
+package br.com.client.micro.domain.enums;
 
 public enum Status {
     CREATED,

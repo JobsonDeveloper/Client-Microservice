@@ -1,9 +1,11 @@
 package br.com.client.micro.service.imp;
 
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.dto.response.ClientDto;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import br.com.client.micro.exceptions.ClientNotFoundException;
 import br.com.client.micro.repository.IClientRepository;
+import br.com.client.micro.repository.IRoleRepository;
 import br.com.client.micro.service.IClientService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,55 +16,45 @@ import java.time.LocalDateTime;
 @Service
 public class ClientService implements IClientService {
 
-    private final IClientRepository clientRepository;
+    private final IClientRepository iClientRepository;
 
-    public ClientService(IClientRepository clientRepository) {
-        this.clientRepository = clientRepository;
+    public ClientService(
+            IClientRepository iClientRepository,
+            IRoleRepository iRoleRepository
+    ) {
+        this.iClientRepository = iClientRepository;
     }
 
     @Override
     public Client createClient(Client client) {
-        boolean clientByCpf = clientRepository.existsByCpf(client.getCpf());
+        boolean clientByCpf = iClientRepository.existsByCpf(client.getCpf());
         if (clientByCpf) throw new ClientAlreadyRegisteredException();
 
-        boolean clientByEmail = clientRepository.existsByEmail(client.getEmail());
+        boolean clientByEmail = iClientRepository.existsByEmail(client.getEmail());
         if (clientByEmail) throw new ClientAlreadyRegisteredException();
 
-        return clientRepository.save(client);
+        return iClientRepository.save(client);
     }
 
     @Override
     public void deleteClient(String id) {
-        clientRepository.findById(id).orElseThrow(ClientNotFoundException::new);
-        clientRepository.deleteById(id);
+        iClientRepository.findById(id).orElseThrow(ClientNotFoundException::new);
+        iClientRepository.deleteById(id);
     }
 
     @Override
     public Client getClient(String id) {
-        return clientRepository.findById(id).orElseThrow(ClientNotFoundException::new);
+        return iClientRepository.findById(id).orElseThrow(ClientNotFoundException::new);
     }
 
     @Override
-    public Page<Client> listClients(Pageable pageable) {
-        return clientRepository.findAll(pageable)
-                .map(client -> new Client(
-                        client.getId(),
-                        client.getFirstName(),
-                        client.getLastName(),
-                        client.getCpf(),
-                        client.getBirthday(),
-                        client.getEmail(),
-                        client.getPhone(),
-                        client.getAddress(),
-                        client.getPassword(),
-                        client.getCreatedAt(),
-                        client.getUpdatedAt()
-                ));
+    public Page<ClientDto> listClients(Pageable pageable) {
+        return iClientRepository.findByRole_Name("BASIC", pageable).map(ClientDto::new);
     }
 
     @Override
     public Client updateClient(Client client) {
-        Client savedClient = clientRepository.findById(client.getId()).orElseThrow(ClientNotFoundException::new);
+        Client savedClient = iClientRepository.findById(client.getId()).orElseThrow(ClientNotFoundException::new);
 
         Client clientMounter = Client.builder()
                 .id(savedClient.getId())
@@ -73,11 +65,12 @@ public class ClientService implements IClientService {
                 .email(savedClient.getEmail())
                 .phone(client.getPhone())
                 .address(client.getAddress())
+                .role(savedClient.getRole())
                 .password(savedClient.getPassword())
                 .createdAt(savedClient.getCreatedAt())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        return clientRepository.save(clientMounter);
+        return iClientRepository.save(clientMounter);
     }
 }

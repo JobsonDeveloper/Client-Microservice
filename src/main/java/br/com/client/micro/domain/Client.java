@@ -1,5 +1,7 @@
 package br.com.client.micro.domain;
 
+import br.com.client.micro.domain.complements.Address;
+import br.com.client.micro.domain.complements.Phone;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -29,6 +31,7 @@ public class Client {
     private String email;
     private Phone phone;
     private Address address;
+    private Role role;
     private String password;
 
     @CreatedDate

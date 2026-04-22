@@ -1,7 +1,7 @@
 package br.com.client.micro.event.consumer;
 
 import br.com.client.micro.domain.Client;
-import br.com.client.micro.domain.Status;
+import br.com.client.micro.domain.enums.Status;
 import br.com.client.micro.event.dto.DeliveryEventDto;
 import br.com.client.micro.event.dto.PaymentEventDto;
 import br.com.client.micro.event.dto.SaleEventDto;

@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Schema(description = "Pagination informations")
+@Schema(description = "Pagination information")
 public class PageableResponseDto {
     private int pageNumber;
 }
