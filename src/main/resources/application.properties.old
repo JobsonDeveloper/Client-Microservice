@@ -1,4 +1,4 @@
-spring.application.name=client microservice
+spring.application.name=user microservice
 server.port=
 spring.application.zone=America/Recife
 company.email=
@@ -22,7 +22,7 @@ spring.data.mongodb.uri=mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_HOST}:${MO
 
 # Apache Kafka
 spring.kafka.consumer.bootstrap-servers=
-spring.kafka.consumer.group-id=client-group
+spring.kafka.consumer.group-id=user-group
 
 spring.kafka.consumer.properties.spring.json.use.type.headers=false
 spring.kafka.consumer.key-deserializer=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
