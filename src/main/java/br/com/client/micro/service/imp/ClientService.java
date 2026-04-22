@@ -1,14 +1,22 @@
 package br.com.client.micro.service.imp;
 
 import br.com.client.micro.domain.Client;
+import br.com.client.micro.domain.Role;
+import br.com.client.micro.domain.Session;
+import br.com.client.micro.dto.response.ClientAuthDto;
 import br.com.client.micro.dto.response.ClientDto;
 import br.com.client.micro.exceptions.ClientAlreadyRegisteredException;
 import br.com.client.micro.exceptions.ClientNotFoundException;
+import br.com.client.micro.exceptions.PermissionDeniedException;
 import br.com.client.micro.repository.IClientRepository;
 import br.com.client.micro.repository.IRoleRepository;
 import br.com.client.micro.service.IClientService;
+import br.com.client.micro.service.ISessionService;
+import br.com.client.micro.util.TokenGenerator;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,12 +25,21 @@ import java.time.LocalDateTime;
 public class ClientService implements IClientService {
 
     private final IClientRepository iClientRepository;
+    private final ISessionService iSessionService;
+    private final TokenGenerator tokenGenerator;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public ClientService(
             IClientRepository iClientRepository,
-            IRoleRepository iRoleRepository
+            IRoleRepository iRoleRepository,
+            ISessionService iSessionService,
+            TokenGenerator tokenGenerator,
+            BCryptPasswordEncoder passwordEncoder
     ) {
         this.iClientRepository = iClientRepository;
+        this.iSessionService = iSessionService;
+        this.tokenGenerator = tokenGenerator;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -72,5 +89,10 @@ public class ClientService implements IClientService {
                 .build();
 
         return iClientRepository.save(clientMounter);
+    }
+
+    @Override
+    public Client getClientByEmail(String email) {
+        return iClientRepository.findByEmail(email).orElseThrow(ClientNotFoundException::new);
     }
 }
