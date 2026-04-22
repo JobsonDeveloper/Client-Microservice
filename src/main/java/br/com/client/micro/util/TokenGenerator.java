@@ -22,7 +22,7 @@ public class TokenGenerator {
     public String tokenConstructor(
             String userId,
             String sessionId,
-            String scopes
+            String scopeId
     ) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -30,7 +30,7 @@ public class TokenGenerator {
                 .subject(userId)
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(this.tokenLifeTime))
-                .claim("scope", scopes)
+                .claim("scope", scopeId)
                 .claim("sessionId", sessionId)
                 .build();
 
