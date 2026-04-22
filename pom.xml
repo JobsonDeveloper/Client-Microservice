@@ -8,11 +8,11 @@
 		<version>3.5.7</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>br.com.client.micro</groupId>
-	<artifactId>client</artifactId>
+	<groupId>br.com.user.micro</groupId>
+	<artifactId>user</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>client microservice</name>
-	<description>Cliente Microservice</description>
+	<name>user microservice</name>
+	<description>User Microservice</description>
 	<url/>
 	<licenses>
 		<license/>
