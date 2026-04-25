@@ -143,7 +143,7 @@ public class AuthController {
 
         if (!password.equals(confirmationPassword)) throw new DifferentPasswordsException();
 
-        Role role = iRoleService.findByName("BASIC");
+        Role role = iRoleService.findById(1);
         String encodedPassword = passwordEncoder.encode(password);
         User user = User.builder()
                 .firstName(firstName)
@@ -153,14 +153,14 @@ public class AuthController {
                 .email(email)
                 .phone(phone)
                 .address(address)
-                .role(role)
+                .role(role.getName())
                 .password(encodedPassword)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         User newUser = iUserService.create(user);
         Session session = iSessionService.startSession(newUser.getId(), request);
-        String token = tokenGenerator.tokenConstructor(newUser.getId(), session.getId(), newUser.getRole().getId());
+        String token = tokenGenerator.tokenConstructor(newUser.getId(), session.getId(), newUser.getRole());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new UserAuthDto(
@@ -172,6 +172,7 @@ public class AuthController {
     }
 
     @PostMapping("/api/user/auth/login")
+    @Transactional
     @Operation(
             summary = "User login",
             description = "Register the login of a user and return a access token",
@@ -239,8 +240,8 @@ public class AuthController {
         String userId = user.getId();
         Session session = iSessionService.startSession(userId, request);
         String sessionId = session.getId();
-        String roleId = user.getRole().getId();
-        String token = tokenGenerator.tokenConstructor(userId, sessionId, roleId);
+        String role = user.getRole();
+        String token = tokenGenerator.tokenConstructor(userId, sessionId, role);
 
         return ResponseEntity.status(HttpStatus.OK).body(new UserAuthDto(
                 "Login realized successfully!",

@@ -1,5 +1,6 @@
 package br.com.user.micro.config;
 
+import br.com.user.micro.util.JwtAuthConverter;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -38,9 +39,23 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/user/auth/login",
+                                "/api/user/auth/register",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+//                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(
+                        jwt -> jwt.jwtAuthenticationConverter(
+                                new JwtAuthConverter()
+                        ))
+                )
                 .build();
     }
 

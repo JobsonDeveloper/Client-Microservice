@@ -15,7 +15,7 @@ public class RoleService implements IRoleService {
     }
 
     @Override
-    public Role findByName(String roleName) {
-        return iRoleRepository.findByName(roleName).orElseThrow(RoleNotFoundException::new);
+    public Role findById(Integer id) {
+        return iRoleRepository.findById(id).orElseThrow(RoleNotFoundException::new);
     }
 }

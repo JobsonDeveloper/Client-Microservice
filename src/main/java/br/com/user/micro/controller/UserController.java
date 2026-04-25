@@ -22,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -36,6 +38,8 @@ public class UserController {
     }
 
     @DeleteMapping("/api/user/{id}/delete")
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN', 'BASIC')")
     @Operation(
             summary = "Delete a user",
             description = "Delete a user of the system",
@@ -94,6 +98,7 @@ public class UserController {
     }
 
     @PatchMapping("/api/user/update")
+    @Transactional
     @Operation(
             summary = "Update user information",
             description = "Update the information of a user",
@@ -178,6 +183,7 @@ public class UserController {
         );
     }
 
+    @GetMapping("/api/user/{id}/info")
     @Operation(
             summary = "Get user information",
             description = "Return all information of a user",
@@ -217,7 +223,6 @@ public class UserController {
                     )
             }
     )
-    @GetMapping("/api/user/{id}/info")
     public ResponseEntity<UserInfoDto> getUserInfo(
             @Parameter(description = "User id", required = true)
             @PathVariable String id
@@ -232,6 +237,7 @@ public class UserController {
     }
 
     @GetMapping("/api/user/list")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
             summary = "List users",
             description = "Return a list of users",

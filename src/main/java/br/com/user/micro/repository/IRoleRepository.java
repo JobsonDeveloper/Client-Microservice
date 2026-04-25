@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface IRoleRepository extends MongoRepository<Role, String> {
     public Optional<Role> findByName(String name);
+    public Optional<Role> findById(Integer id);
 }

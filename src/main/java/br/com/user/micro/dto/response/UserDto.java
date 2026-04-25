@@ -17,7 +17,7 @@ public record UserDto(
         String email,
         Phone phone,
         Address address,
-        Role role,
+        String role,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

@@ -31,7 +31,7 @@ public class User {
     private String email;
     private Phone phone;
     private Address address;
-    private Role role;
+    private String role;
     private String password;
 
     @CreatedDate
