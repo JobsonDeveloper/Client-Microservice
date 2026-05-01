@@ -1,9 +1,12 @@
 package br.com.user.micro.service.imp;
 
+import br.com.user.micro.domain.Role;
 import br.com.user.micro.domain.User;
 import br.com.user.micro.dto.response.UserDto;
+import br.com.user.micro.exceptions.RoleNotFoundException;
 import br.com.user.micro.exceptions.UserAlreadyRegisteredException;
 import br.com.user.micro.exceptions.UserNotFoundException;
+import br.com.user.micro.repository.IRoleRepository;
 import br.com.user.micro.repository.IUserRepository;
 import br.com.user.micro.service.IUserService;
 import org.springframework.data.domain.Page;
@@ -17,8 +20,11 @@ public class UserService implements IUserService {
 
     private final IUserRepository iUserRepository;
 
-    public UserService(IUserRepository iUserRepository) {
+    private final IRoleRepository iRoleRepository;
+
+    public UserService(IUserRepository iUserRepository, IRoleRepository iRoleRepository) {
         this.iUserRepository = iUserRepository;
+        this.iRoleRepository = iRoleRepository;
     }
 
     @Override
@@ -44,7 +50,11 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Page<UserDto> list(Pageable pageable) {
+    public Page<UserDto> list(Pageable pageable, String userRole) {
+        Role role = iRoleRepository.findByName(userRole).orElseThrow(RoleNotFoundException::new);
+
+        if(role.getName().equals("ADMIN")) return iUserRepository.findAll(pageable).map(UserDto::new);
+
         return iUserRepository.findByRole("BASIC", pageable).map(UserDto::new);
     }
 

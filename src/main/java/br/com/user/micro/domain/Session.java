@@ -20,5 +20,6 @@ public class Session {
     private String userAgent;
     private String userDevice;
     private LocalDateTime loginOn;
+    private LocalDateTime lastSeenAt;
     private LocalDateTime logoutOn;
 }

@@ -10,7 +10,9 @@ import br.com.user.micro.dto.swagger.PageUserResponseDto;
 import br.com.user.micro.domain.User;
 import br.com.user.micro.dto.swagger.validation.fields.FieldsErrorDto;
 import br.com.user.micro.dto.request.ChangeUserDataDto;
-import br.com.user.micro.service.imp.UserService;
+import br.com.user.micro.exceptions.PermissionDeniedException;
+import br.com.user.micro.service.IUserService;
+import br.com.user.micro.util.TokenCredentialsExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,23 +25,32 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 
 @RestController
 @Tag(name = "User", description = "User operations")
 public class UserController {
-    private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    private final IUserService iUserService;
+
+    private final TokenCredentialsExtractor tokenExtractor;
+
+    public UserController(
+            IUserService iUserService,
+            TokenCredentialsExtractor tokenExtractor
+    ) {
+        this.iUserService = iUserService;
+        this.tokenExtractor = tokenExtractor;
     }
 
     @DeleteMapping("/api/user/{id}/delete")
     @Transactional
-    @PreAuthorize("hasRole('ADMIN', 'BASIC')")
     @Operation(
             summary = "Delete a user",
             description = "Delete a user of the system",
@@ -59,6 +70,22 @@ public class UserController {
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = FieldsErrorDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthenticated user",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Incompatible user role",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -89,9 +116,13 @@ public class UserController {
     )
     public ResponseEntity<ResponseMessageDto> deleteUser(
             @Parameter(description = "User id", required = true)
-            @PathVariable String id
+            @PathVariable String id,
+            @RequestHeader("Authorization") String authorization
     ) {
-        userService.delete(id);
+        Boolean valid = tokenExtractor.userValidator(id, authorization);
+        if (!valid) throw new AuthorizationDeniedException("");
+
+        iUserService.delete(id);
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ResponseMessageDto("User deleted successfully!")
         );
@@ -121,6 +152,22 @@ public class UserController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthenticated user",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Incompatible user role",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
                             responseCode = "404",
                             description = "User not found",
                             content = @Content(
@@ -146,7 +193,10 @@ public class UserController {
                     )
             }
     )
-    public ResponseEntity<UserInfoDto> updateUserData(@Valid @RequestBody ChangeUserDataDto userDto) {
+    public ResponseEntity<UserInfoDto> updateUserData(
+            @Valid @RequestBody ChangeUserDataDto userDto,
+            @RequestHeader("Authorization") String authorization
+    ) {
         String id = userDto.id();
         String firstName = userDto.firstName();
         String lastName = userDto.lastName();
@@ -173,7 +223,13 @@ public class UserController {
                 .address(address)
                 .build();
 
-        User user = userService.update(currentUser);
+        HashMap<String, String> credentials = tokenExtractor.extractor(authorization);
+
+        if (credentials.get("role").equals("BASIC")) {
+            if (!credentials.get("id").equals(id)) throw new AuthorizationDeniedException("");
+        }
+
+        User user = iUserService.update(currentUser);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new UserInfoDto(
@@ -195,6 +251,22 @@ public class UserController {
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(implementation = UserInfoDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthenticated user",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Incompatible user role",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -225,9 +297,16 @@ public class UserController {
     )
     public ResponseEntity<UserInfoDto> getUserInfo(
             @Parameter(description = "User id", required = true)
-            @PathVariable String id
+            @PathVariable String id,
+            @RequestHeader("Authorization") String authorization
     ) {
-        User user = userService.getById(id);
+        HashMap<String, String> credentials = tokenExtractor.extractor(authorization);
+
+        if (credentials.get("role").equals("BASIC")) {
+            if (!credentials.get("id").equals(id)) throw new AuthorizationDeniedException("");
+        }
+
+        User user = iUserService.getById(id);
         return ResponseEntity.status(HttpStatus.OK).body(
                 new UserInfoDto(
                         "User information returned successfully!",
@@ -236,8 +315,8 @@ public class UserController {
         );
     }
 
-    @GetMapping("/api/user/list")
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/user/list")
     @Operation(
             summary = "List users",
             description = "Return a list of users",
@@ -251,6 +330,22 @@ public class UserController {
                                     schema = @Schema(
                                             implementation = PageUserResponseDto.class
                                     )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthenticated user",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Incompatible user role",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = DefaultErrorResponseDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -273,10 +368,13 @@ public class UserController {
     )
     public ResponseEntity<PageUserResponseDto> listUsers(
             @RequestParam(defaultValue = "0", required = false, name = "page") int page,
-            @RequestParam(defaultValue = "10", required = false, name = "size") int size
+            @RequestParam(defaultValue = "10", required = false, name = "size") int size,
+            @RequestHeader("Authorization") String authorization
     ) {
+        HashMap<String, String> credentials = tokenExtractor.extractor(authorization);
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<UserDto> userws = userService.list(pageRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(PageUserResponseDto.from(userws));
+        Page<UserDto> userList = iUserService.list(pageRequest, credentials.get("role"));
+
+        return ResponseEntity.status(HttpStatus.OK).body(PageUserResponseDto.from(userList));
     }
 }

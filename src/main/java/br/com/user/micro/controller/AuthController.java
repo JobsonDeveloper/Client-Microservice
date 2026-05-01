@@ -17,6 +17,7 @@ import br.com.user.micro.exceptions.PermissionDeniedException;
 import br.com.user.micro.service.IUserService;
 import br.com.user.micro.service.IRoleService;
 import br.com.user.micro.service.ISessionService;
+import br.com.user.micro.util.TokenCredentialsExtractor;
 import br.com.user.micro.util.TokenGenerator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 
 @RestController
 @Tag(name = "Auth", description = "User authentication")
@@ -44,7 +46,7 @@ public class AuthController {
     private final ISessionService iSessionService;
     private final IRoleService iRoleService;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final JwtDecoder jwtDecoder;
+    private final TokenCredentialsExtractor tokenExtractor;
 
     public AuthController(
             IUserService iUserService,
@@ -52,14 +54,14 @@ public class AuthController {
             ISessionService iSessionService,
             IRoleService iRoleService,
             BCryptPasswordEncoder passwordEncoder,
-            JwtDecoder jwtDecoder
+            TokenCredentialsExtractor tokenExtractor
     ) {
         this.iUserService = iUserService;
         this.tokenGenerator = tokenGenerator;
         this.iSessionService = iSessionService;
         this.iRoleService = iRoleService;
         this.passwordEncoder = passwordEncoder;
-        this.jwtDecoder = jwtDecoder;
+        this.tokenExtractor = tokenExtractor;
     }
 
     @PostMapping("/api/user/auth/register")
@@ -299,11 +301,8 @@ public class AuthController {
             }
     )
     public ResponseEntity<ResponseMessageDto> logout(@RequestHeader("Authorization") String authorization) {
-        String token = authorization.replace("Bearer", "").trim();
-        Jwt tokenInfo = jwtDecoder.decode(token);
-        String sessionId = tokenInfo.getClaim("sessionId");
-
-        iSessionService.endSession(sessionId);
+        HashMap<String, String> credentials = tokenExtractor.extractor(authorization);
+        iSessionService.endSession(credentials.get("sessionId"));
 
         return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessageDto("Logout realized successfully!"));
     }
