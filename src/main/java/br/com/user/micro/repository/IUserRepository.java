@@ -12,6 +12,6 @@ import java.util.Optional;
 public interface IUserRepository extends MongoRepository<User, String> {
     public boolean existsByCpf(String cpf);
     public boolean existsByEmail(String email);
-    Page<User> findByRole_Name(String roleName, Pageable pageable);
+    Page<User> findByRole(String roleName, Pageable pageable);
     public Optional<User> findByEmail(String email);
 }

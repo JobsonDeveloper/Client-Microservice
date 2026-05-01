@@ -11,6 +11,7 @@ payment.micro.url=
 application.public.key=
 application.private.key=
 application.token.lifetime=
+application.services.key=
 
 # Database
 MONGO_HOST=

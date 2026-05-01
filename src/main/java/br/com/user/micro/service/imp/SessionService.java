@@ -34,6 +34,7 @@ public class SessionService implements ISessionService {
                 .userAgent(agent)
                 .userDevice(device.os.family)
                 .loginOn(LocalDateTime.now())
+                .lastSeenAt(LocalDateTime.now())
                 .build();
 
         return iSessionRepository.save(session);
@@ -43,6 +44,7 @@ public class SessionService implements ISessionService {
     public void endSession(String sessionId) {
         Session session = iSessionRepository.findById(sessionId).orElseThrow(SessionNotFoundException::new);
         session.setLogoutOn(LocalDateTime.now());
+        session.setLastSeenAt(LocalDateTime.now());
         iSessionRepository.save(session);
     }
 }

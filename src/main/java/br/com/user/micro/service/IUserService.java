@@ -9,7 +9,7 @@ public interface IUserService {
     public User create(User user);
     public void delete(String id);
     public User getById(String id);
-    public Page<UserDto> list(Pageable pageable);
+    public Page<UserDto> list(Pageable pageable, String userRole);
     public User update(User user);
     public User getByEmail(String email);
 }
